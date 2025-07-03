@@ -1,0 +1,53 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  role        Role     // ENUM: USER or LAWYER
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  cases       Case[]
+  subscription Subscription?
+}
+
+model Case {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String
+  location    String
+  status      CaseStatus @default(OPEN)
+  userId      String
+  lawyerId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation("UserCases", fields: [userId], references: [id])
+  lawyer      User?     @relation("LawyerCases", fields: [lawyerId], references: [id])
+}
+
+model Subscription {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  stripeId    String
+  status      String
+  expiresAt   DateTime
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  LAWYER
+}
+
+enum CaseStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
